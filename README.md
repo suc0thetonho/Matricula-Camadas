@@ -40,7 +40,7 @@ terminar a refatoração, rode de novo: as respostas devem ser as mesmas.
 5. `2` → `42`
 6. `3`
 
-## A atividade
+## A atividade dos Antonio's (Carlos e Pedro)
 
 Separem o código em três camadas — apresentação, negócio e persistência — **sem
 alterar o comportamento observável do programa**.
