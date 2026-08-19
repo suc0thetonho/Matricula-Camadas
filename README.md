@@ -51,24 +51,30 @@ função, quais responsabilidades ela acumula.
 ### Entregas
 
 1. Árvore de pastas e arquivos.
+- Decidimos por entregar por via de arquivos, por ser uma alternativa mais facil, porém fazer em diretorio, acredito que a unica alteração seria adicionar /nomePasta/nomeArquivo.
 2. Tabela de imports permitidos: quem pode importar quem, e quem nunca importa quem.
+- A tabela de imports segue abaixo
 3. Uma frase justificando cada decisão que gerou discussão no grupo.
+- Após a discursão sobre se precisavamos ou não de diretorio para organização dos arquivos, foi decidido que como é um codigo mais simples e sem complexibilidade, a decisão foi a utilizar apenas de arquivos.
 4. A declaração de se as camadas ficaram fechadas ou abertas, e por quê.
+- Fechadas pois cada camada é responsavel por importar de apenas uma classe abaixo, deixando de fora a classe persistencia, que importa e apenas é permitida importar apenas de sua biblioteca. 
 
 ### Tabela de imports
 
 | Módulo | Pode importar | Nunca importa |
 |---|---|---|
-| | | |
-| | | |
-| | | |
+|apresentacao |negocio |persistencia |
+|negocio |persistencia |apresentacao |
+|persistencai |da biblioteca python |apresentacao e negocio |
 
 ### Perguntas para responder na apresentação
 
 - Onde ficou a validação do formato do texto digitado? Por quê ali?
-- A camada de negócio devolve texto pronto para exibir ou dados? Qual das duas
-  opções o grupo escolheu, e o que isso custa?
+  - na camada de negocio.
+- A camada de negócio devolve texto pronto para exibir ou dados? Qual das duas opções o grupo escolheu, e o que isso custa?
+  - Dados,o custo é de menos processamento e mais agilidade
 - Se amanhã o sistema virasse uma API web, quantos arquivos precisariam mudar?
+  - Acredito eu que nenhum
 
 ### Desafio extra
 
