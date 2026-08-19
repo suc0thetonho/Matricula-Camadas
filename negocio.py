@@ -1,41 +1,9 @@
-"""Sistema de matrícula — versão monolítica.
 
-Exercício: separe este arquivo em três camadas (apresentação, negócio,
-persistência) sem alterar o comportamento. Nada aqui está errado do ponto de
-vista funcional: o problema é que tudo mora no mesmo lugar.
-
-Rodar:  python matricula_monolito.py
-"""
-
-import sqlite3
+from persistencia import *
 from datetime import datetime, timedelta
 
-BANCO = "escola.db"
 LIMITE_FALTAS = 3
 HORAS_PARA_PAGAR = 48
-
-
-def criar_tabelas():
-    conn = sqlite3.connect(BANCO)
-    conn.execute("CREATE TABLE IF NOT EXISTS aluno (id INTEGER PRIMARY KEY, nome TEXT, faltas INTEGER)")
-    conn.execute("CREATE TABLE IF NOT EXISTS turma (codigo TEXT PRIMARY KEY, nome TEXT, vagas INTEGER)")
-    conn.execute(
-        "CREATE TABLE IF NOT EXISTS matricula ("
-        "id INTEGER PRIMARY KEY AUTOINCREMENT, aluno_id INTEGER, turma TEXT, "
-        "criada_em TEXT, expira_em TEXT, paga INTEGER DEFAULT 0)"
-    )
-    conn.commit()
-    conn.close()
-
-
-def semear():
-    conn = sqlite3.connect(BANCO)
-    conn.execute("INSERT OR REPLACE INTO aluno VALUES (42, 'Ana Ribeiro', 1)")
-    conn.execute("INSERT OR REPLACE INTO aluno VALUES (43, 'Bruno Lima', 4)")
-    conn.execute("INSERT OR REPLACE INTO turma VALUES ('ES2', 'Engenharia de Software II', 2)")
-    conn.execute("INSERT OR REPLACE INTO turma VALUES ('AS1', 'Arquitetura de Software', 0)")
-    conn.commit()
-    conn.close()
 
 
 def matricular(entrada_usuario):
@@ -50,7 +18,8 @@ def matricular(entrada_usuario):
 
     conn = sqlite3.connect(BANCO)
 
-    linha_aluno = conn.execute("SELECT nome, faltas FROM aluno WHERE id = ?", (aluno_id,)).fetchone()
+    linha_aluno = conn.execute(
+        "SELECT nome, faltas FROM aluno WHERE id = ?", (aluno_id,)).fetchone()
     if linha_aluno is None:
         conn.close()
         return "Aluno %d nao encontrado" % aluno_id
@@ -60,7 +29,8 @@ def matricular(entrada_usuario):
         conn.close()
         return "%s tem %d faltas e nao pode se matricular" % (nome, faltas)
 
-    linha_turma = conn.execute("SELECT nome, vagas FROM turma WHERE codigo = ?", (turma,)).fetchone()
+    linha_turma = conn.execute(
+        "SELECT nome, vagas FROM turma WHERE codigo = ?", (turma,)).fetchone()
     if linha_turma is None:
         conn.close()
         return "Turma %s nao existe" % turma
@@ -71,7 +41,8 @@ def matricular(entrada_usuario):
         return "Sem vagas em %s" % nome_turma
 
     ja_matriculado = conn.execute(
-        "SELECT 1 FROM matricula WHERE aluno_id = ? AND turma = ?", (aluno_id, turma)
+        "SELECT 1 FROM matricula WHERE aluno_id = ? AND turma = ?", (
+            aluno_id, turma)
     ).fetchone()
     if ja_matriculado:
         conn.close()
@@ -83,7 +54,8 @@ def matricular(entrada_usuario):
         "INSERT INTO matricula (aluno_id, turma, criada_em, expira_em) VALUES (?, ?, ?, ?)",
         (aluno_id, turma, agora.isoformat(), expira.isoformat()),
     )
-    conn.execute("UPDATE turma SET vagas = vagas - 1 WHERE codigo = ?", (turma,))
+    conn.execute(
+        "UPDATE turma SET vagas = vagas - 1 WHERE codigo = ?", (turma,))
     conn.commit()
     conn.close()
 
@@ -98,11 +70,13 @@ def cancelar_expiradas():
     conn = sqlite3.connect(BANCO)
     agora = datetime.now().isoformat()
     expiradas = conn.execute(
-        "SELECT id, turma FROM matricula WHERE paga = 0 AND expira_em < ?", (agora,)
+        "SELECT id, turma FROM matricula WHERE paga = 0 AND expira_em < ?", (
+            agora,)
     ).fetchall()
     for matricula_id, turma in expiradas:
         conn.execute("DELETE FROM matricula WHERE id = ?", (matricula_id,))
-        conn.execute("UPDATE turma SET vagas = vagas + 1 WHERE codigo = ?", (turma,))
+        conn.execute(
+            "UPDATE turma SET vagas = vagas + 1 WHERE codigo = ?", (turma,))
     conn.commit()
     conn.close()
     return "%d matricula(s) expirada(s) cancelada(s)" % len(expiradas)
@@ -120,28 +94,7 @@ def listar(aluno_id):
         return "Nenhuma matricula encontrada"
     saida = ["Matriculas do aluno %d:" % aluno_id]
     for codigo, nome_turma, expira_em, paga in linhas:
-        situacao = "paga" if paga else "aguardando pagamento ate " + expira_em[:16].replace("T", " ")
+        situacao = "paga" if paga else "aguardando pagamento ate " + \
+            expira_em[:16].replace("T", " ")
         saida.append("  - %s (%s) — %s" % (codigo, nome_turma, situacao))
     return "\n".join(saida)
-
-
-def menu():
-    criar_tabelas()
-    semear()
-    while True:
-        print("\n1) Matricular  2) Listar  3) Cancelar expiradas  4) Sair")
-        opcao = input("> ").strip()
-        if opcao == "1":
-            print(matricular(input("id do aluno, codigo da turma: ")))
-        elif opcao == "2":
-            print(listar(int(input("id do aluno: "))))
-        elif opcao == "3":
-            print(cancelar_expiradas())
-        elif opcao == "4":
-            break
-        else:
-            print("Opcao invalida")
-
-
-if __name__ == "__main__":
-    menu()
